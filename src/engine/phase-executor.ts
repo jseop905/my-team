@@ -117,6 +117,20 @@ export class PhaseExecutor {
       // artifacts 디렉토리가 비어있을 수 있음
     }
 
+    // 현재 run의 reviews
+    try {
+      const entries = await readdir(join(this.runDir, "reviews"));
+      for (const entry of entries) {
+        const content = await readFile(
+          join(this.runDir, "reviews", entry),
+          "utf-8",
+        );
+        artifacts.set(`reviews/${entry}`, content);
+      }
+    } catch {
+      // reviews 디렉토리가 비어있을 수 있음
+    }
+
     // inputRunId가 있으면 선행 run의 artifacts도 추가
     if (this.runMeta.inputRunId) {
       const inputArtifacts = await this.runManager.loadInputRunArtifacts(
@@ -148,6 +162,16 @@ export class PhaseExecutor {
       } else {
         parts.push(`---\n\n# 입력: ${inputPath}\n\n(아직 생성되지 않음)`);
       }
+    }
+
+    // 리뷰 기록 주입
+    const reviewEntries = [...ctx.previousArtifacts.entries()]
+      .filter(([path]) => path.startsWith("reviews/"));
+    if (reviewEntries.length > 0) {
+      const reviewParts = reviewEntries
+        .map(([path, content]) => `### ${path}\n\n${content}`)
+        .join("\n\n");
+      parts.push(`---\n\n# 리뷰 기록\n\n${reviewParts}`);
     }
 
     const fileInstructions = agentDef.outputFiles

@@ -27,9 +27,9 @@ export async function parseAgentFile(
     throw new Error(`에이전트 "${name}": 출력 파일이 정의되지 않았습니다.`);
   }
 
-  // 포함 내용
-  const specMatch = outputSection.match(/포함 내용:\s*\n([\s\S]*)/);
-  const outputSpec = specMatch ? specMatch[1].trim() : "";
+  // 포함 내용 (복수 서브섹션이 있을 경우 각각 추출)
+  const specMatches = [...outputSection.matchAll(/포함 내용:\s*\n([\s\S]*?)(?=\n###|\n- 파일:|$)/g)];
+  const outputSpec = specMatches.map((m) => m[1].trim()).filter(Boolean).join("\n");
 
   // 교차 리뷰 역할
   const reviewSection = extractSection(content, "교차 리뷰 역할");

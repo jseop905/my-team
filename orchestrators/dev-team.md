@@ -20,8 +20,8 @@
 
 | Phase | 에이전트                     | 실행 방식                      |
 | ----- | ---------------------------- | ------------------------------ |
-| 1     | Frontend Dev + Backend Dev   | Turn 기반 (구현 → 리뷰 → 수정)|
-| 2     | QA + Code Reviewer           | Turn 기반 (검증 → 피드백)      |
+| 1     | Frontend Dev, Backend Dev    | Turn 기반 (구현 → 리뷰 → 수정)|
+| 2     | QA, Code Reviewer            | Turn 기반 (검증 → 피드백)      |
 | 3     | DevOps                       | 단독 실행                      |
 
 ## 입력
