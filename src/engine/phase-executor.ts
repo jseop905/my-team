@@ -44,6 +44,7 @@ export class PhaseExecutor {
       artifactsDir: join(this.runDir, "artifacts"),
       reviewsDir: join(this.runDir, "reviews"),
       logsDir: join(this.runDir, "logs"),
+      projectDir: join(this.runDir, "project"),
       previousArtifacts,
     };
 
@@ -181,6 +182,6 @@ export class PhaseExecutor {
       `---\n\n위 내용을 바탕으로 ${agentDef.outputFiles.join(", ")}를 작성하라.\n${fileInstructions}`,
     );
 
-    return parts.join("\n\n");
+    return parts.join("\n\n").replaceAll("{projectDir}", ctx.projectDir);
   }
 }

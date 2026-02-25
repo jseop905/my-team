@@ -6,6 +6,7 @@ export interface PhaseContext {
   artifactsDir: string;
   reviewsDir: string;
   logsDir: string;
+  projectDir: string;
   previousArtifacts: Map<string, string>;
 }
 

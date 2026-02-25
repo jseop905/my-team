@@ -6,6 +6,7 @@ export interface AgentRunOptions {
   agentDef: AgentDefinition;
   prompt: string;
   artifactsDir: string;
+  projectDir?: string;
   phase: number;
   turn: number;
   logger: Logger;
@@ -33,6 +34,7 @@ export async function runAgent(
     agentDef,
     prompt,
     artifactsDir,
+    projectDir,
     phase,
     turn,
     logger,
@@ -50,7 +52,7 @@ export async function runAgent(
   let success = false;
   let error: string | undefined;
 
-  const systemPrompt = buildSystemPrompt(agentDef, artifactsDir);
+  const systemPrompt = buildSystemPrompt(agentDef, artifactsDir, projectDir);
 
   try {
     const permissionMode =
@@ -167,8 +169,9 @@ function execClaude(args: string[], cwd: string, agentName: string): Promise<str
 function buildSystemPrompt(
   agentDef: AgentDefinition,
   artifactsDir: string,
+  projectDir?: string,
 ): string {
-  return [
+  const lines = [
     `너는 "${agentDef.name}" 에이전트이다.`,
     ``,
     `## 역할`,
@@ -181,12 +184,26 @@ function buildSystemPrompt(
     `Write 도구를 사용하여 위 절대 경로에 파일을 생성하라.`,
     agentDef.outputSpec,
     ``,
+  ];
+
+  if (projectDir) {
+    lines.push(
+      `## 프로젝트 디렉토리`,
+      `코드 파일은 다음 디렉토리에 생성하라: ${projectDir}`,
+      `이 경로를 {projectDir}로 참조한다.`,
+      ``,
+    );
+  }
+
+  lines.push(
     `## 작업 지침`,
-    agentDef.promptTemplate,
+    agentDef.promptTemplate.replaceAll("{projectDir}", projectDir ?? artifactsDir),
     ``,
     `## 중요 규칙`,
     `- 반드시 Write 도구로 파일을 생성하라. 텍스트 응답만 하지 마라.`,
     `- 파일 경로는 절대 경로를 사용하라.`,
     `- 한국어로 작성하라.`,
-  ].join("\n");
+  );
+
+  return lines.join("\n");
 }

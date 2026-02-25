@@ -21,6 +21,7 @@ export class RunManager {
     await mkdir(join(runDir, "artifacts"), { recursive: true });
     await mkdir(join(runDir, "reviews"), { recursive: true });
     await mkdir(join(runDir, "logs"), { recursive: true });
+    await mkdir(join(runDir, "project"), { recursive: true });
 
     const runMeta: RunMeta = {
       id,
