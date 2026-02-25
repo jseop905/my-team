@@ -75,7 +75,8 @@ async function main() {
     projectDirection,
   );
 
-  let totalCost = 0;
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
   let hasFailed = false;
 
   for (const assignment of orchDef.phaseAssignment) {
@@ -86,7 +87,8 @@ async function main() {
     try {
       const results = await phaseExecutor.executePhase(assignment);
       for (const r of results) {
-        totalCost += r.costUsd;
+        totalInputTokens += r.inputTokens;
+        totalOutputTokens += r.outputTokens;
         if (!r.success) hasFailed = true;
       }
     } catch (err) {
@@ -97,11 +99,12 @@ async function main() {
   }
 
   // Run 완료
-  await runManager.finalizeRun(runDir, runMeta, totalCost, hasFailed);
+  await runManager.finalizeRun(runDir, runMeta, totalInputTokens, totalOutputTokens, hasFailed);
 
+  const totalTokens = totalInputTokens + totalOutputTokens;
   console.log(`\n${"=".repeat(50)}`);
   console.log(`상태: ${hasFailed ? "FAILED" : "COMPLETED"}`);
-  console.log(`총 비용: $${totalCost.toFixed(4)}`);
+  console.log(`총 토큰: ${totalTokens.toLocaleString()} [입력: ${totalInputTokens.toLocaleString()}, 출력: ${totalOutputTokens.toLocaleString()}]`);
   console.log(`산출물: ${join(runDir, "artifacts")}`);
 }
 

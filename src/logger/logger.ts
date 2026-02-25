@@ -33,7 +33,8 @@ export class Logger {
     turn: number,
     message: string,
     artifact: string,
-    costUsd: number,
+    inputTokens: number,
+    outputTokens: number,
     durationMs: number,
   ): Promise<void> {
     const entry: LogEntry = {
@@ -44,12 +45,14 @@ export class Logger {
       status: "completed",
       message,
       artifact,
-      costUsd,
+      inputTokens,
+      outputTokens,
       durationMs,
     };
     await this.write(agent, entry);
+    const totalTokens = inputTokens + outputTokens;
     console.log(
-      `    [${agent}] ${message} (cost: $${costUsd.toFixed(4)}, ${(durationMs / 1000).toFixed(1)}s)`,
+      `    [${agent}] ${message} (tokens: ${totalTokens.toLocaleString()} [in: ${inputTokens.toLocaleString()}, out: ${outputTokens.toLocaleString()}], ${(durationMs / 1000).toFixed(1)}s)`,
     );
   }
 

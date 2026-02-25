@@ -15,7 +15,8 @@ export interface AgentExecutionResult {
   outputPaths?: string[];
   resultText: string;
   sessionId: string;
-  costUsd: number;
+  inputTokens: number;
+  outputTokens: number;
   durationMs: number;
   numTurns: number;
   error?: string;
@@ -29,6 +30,7 @@ export interface LogEntry {
   status: "in_progress" | "completed" | "error";
   message: string;
   artifact?: string;
-  costUsd?: number;
+  inputTokens?: number;
+  outputTokens?: number;
   durationMs?: number;
 }

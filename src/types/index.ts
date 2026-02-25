@@ -31,7 +31,8 @@ export interface RunMeta {
   completedAt?: string;
   agents: string[];
   phases: PhaseStatus[];
-  totalCostUsd: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
   errors: RunError[];
   inputRunId?: string;
 }

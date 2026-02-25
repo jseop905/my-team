@@ -30,7 +30,8 @@ export class RunManager {
       startedAt: new Date().toISOString(),
       agents,
       phases: phases.map((p) => ({ phase: p, status: "pending" as const })),
-      totalCostUsd: 0,
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
       errors: [],
       inputRunId,
     };
@@ -73,12 +74,14 @@ export class RunManager {
   async finalizeRun(
     runDir: string,
     runMeta: RunMeta,
-    totalCostUsd: number,
+    totalInputTokens: number,
+    totalOutputTokens: number,
     failed: boolean,
   ): Promise<void> {
     runMeta.status = failed ? "failed" : "completed";
     runMeta.completedAt = new Date().toISOString();
-    runMeta.totalCostUsd = totalCostUsd;
+    runMeta.totalInputTokens = totalInputTokens;
+    runMeta.totalOutputTokens = totalOutputTokens;
     await this.saveMeta(runDir, runMeta);
   }
 

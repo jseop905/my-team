@@ -2,3 +2,6 @@ node_modules/
 dist/
 runs/
 *.tsbuildinfo
+.env
+
+todo.md

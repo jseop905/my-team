@@ -1,4 +1,4 @@
-import { query } from "@anthropic-ai/claude-agent-sdk";
+import { spawn } from "node:child_process";
 import type { AgentDefinition, AgentExecutionResult } from "../types/index.js";
 import type { Logger } from "../logger/logger.js";
 
@@ -10,6 +10,20 @@ export interface AgentRunOptions {
   turn: number;
   logger: Logger;
   maxTurns?: number;
+}
+
+interface ClaudeJsonResult {
+  result?: {
+    content?: Array<{ type: string; text: string }>;
+  };
+  session_id?: string;
+  cost?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    total_cost_usd?: number;
+  };
+  duration_ms?: number;
+  num_turns?: number;
 }
 
 export async function runAgent(
@@ -29,50 +43,52 @@ export async function runAgent(
 
   let sessionId = "";
   let resultText = "";
-  let costUsd = 0;
+  let inputTokens = 0;
+  let outputTokens = 0;
   let durationMs = 0;
   let numTurns = 0;
   let success = false;
   let error: string | undefined;
 
+  const systemPrompt = buildSystemPrompt(agentDef, artifactsDir);
+
   try {
-    for await (const message of query({
+    const permissionMode =
+      process.env.AGENT_PERMISSION_MODE ?? "bypassPermissions";
+
+    const args = [
+      "-p",
+      "--output-format", "json",
+      "--max-turns", String(maxTurns),
+      "--system-prompt", systemPrompt,
+      "--allowedTools", "Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch",
+      "--permission-mode", permissionMode,
+      "--no-session-persistence",
       prompt,
-      options: {
-        systemPrompt: buildSystemPrompt(agentDef, artifactsDir),
-        cwd: artifactsDir,
-        allowedTools: [
-          "Read",
-          "Write",
-          "Edit",
-          "Glob",
-          "Grep",
-          "WebSearch",
-          "WebFetch",
-        ],
-        permissionMode: (process.env.AGENT_PERMISSION_MODE ?? "bypassPermissions") as "bypassPermissions",
-        allowDangerouslySkipPermissions: true,
-        maxTurns,
-      },
-    })) {
-      if (message.type === "system" && message.subtype === "init") {
-        sessionId = message.session_id;
-      }
+    ];
 
-      if (message.type === "result") {
-        costUsd = message.total_cost_usd;
-        durationMs = message.duration_ms;
-        numTurns = message.num_turns;
-
-        if (message.subtype === "success") {
-          resultText = message.result;
-          success = true;
-        } else {
-          error = `${message.subtype}: ${message.errors?.join("; ") ?? "unknown"}`;
-          success = false;
-        }
-      }
+    if (permissionMode === "bypassPermissions") {
+      args.splice(args.indexOf("--permission-mode"), 0, "--dangerously-skip-permissions");
     }
+
+    const startTime = Date.now();
+    const stdout = await execClaude(args, artifactsDir, agentDef.name);
+    durationMs = Date.now() - startTime;
+
+    const parsed: ClaudeJsonResult = JSON.parse(stdout);
+
+    sessionId = parsed.session_id ?? "";
+    inputTokens = parsed.cost?.input_tokens ?? 0;
+    outputTokens = parsed.cost?.output_tokens ?? 0;
+    durationMs = parsed.duration_ms ?? durationMs;
+    numTurns = parsed.num_turns ?? 0;
+
+    // result.content에서 텍스트 추출
+    const textBlocks = parsed.result?.content?.filter(
+      (b) => b.type === "text",
+    );
+    resultText = textBlocks?.map((b) => b.text).join("\n") ?? "";
+    success = true;
   } catch (err) {
     error = err instanceof Error ? err.message : String(err);
     success = false;
@@ -85,7 +101,8 @@ export async function runAgent(
       turn,
       "실행 완료",
       agentDef.outputFiles.join(", "),
-      costUsd,
+      inputTokens,
+      outputTokens,
       durationMs,
     );
   } else {
@@ -103,11 +120,48 @@ export async function runAgent(
     outputPaths: agentDef.outputFiles,
     resultText,
     sessionId,
-    costUsd,
+    inputTokens,
+    outputTokens,
     durationMs,
     numTurns,
     error,
   };
+}
+
+function execClaude(args: string[], cwd: string, agentName: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = spawn("claude", args, {
+      cwd,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, CLAUDECODE: "" }, // 중첩 세션 방지 해제
+    });
+
+    const stdoutChunks: Buffer[] = [];
+
+    child.stdout.on("data", (chunk: Buffer) => {
+      stdoutChunks.push(chunk);
+    });
+
+    child.stderr.on("data", (chunk: Buffer) => {
+      const msg = chunk.toString().trim();
+      if (msg) {
+        console.error(`    [${agentName}] ${msg}`);
+      }
+    });
+
+    child.on("error", (err) => {
+      reject(new Error(`claude CLI 실행 불가: ${err.message}`));
+    });
+
+    child.on("close", (code) => {
+      const stdout = Buffer.concat(stdoutChunks).toString();
+      if (code !== 0) {
+        reject(new Error(`claude CLI 실패 (exit code ${code}): ${stdout.slice(0, 500)}`));
+        return;
+      }
+      resolve(stdout);
+    });
+  });
 }
 
 function buildSystemPrompt(
