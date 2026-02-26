@@ -1,4 +1,4 @@
-import { readFile, readdir } from "node:fs/promises";
+import { readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
   AgentDefinition,
@@ -19,9 +19,9 @@ export async function executeTurns(
 
   // ========== Turn 1: 초안 작성 (병렬) ==========
   console.log(`  Turn 1: 초안 작성 (병렬)`);
-  const draftPromises = ctx.agents.map((agentName) => {
+  const draftPromises = ctx.agents.map(async (agentName) => {
     const agentDef = agentDefs.get(agentName)!;
-    const prompt = buildDraftPrompt(agentDef, ctx, projectDirection);
+    const prompt = await buildDraftPrompt(agentDef, ctx, projectDirection);
     return executeWithRetry(agentDef, prompt, ctx, logger, 1);
   });
   const draftResults = await Promise.all(draftPromises);
@@ -67,33 +67,40 @@ export async function executeTurns(
 }
 
 
-function buildDraftPrompt(
+async function buildDraftPrompt(
   agentDef: AgentDefinition,
   ctx: PhaseContext,
   projectDirection: string,
-): string {
-  const parts: string[] = [];
+): Promise<string> {
+  const contextDir = join(ctx.runDir, "context");
+  const contextFileName = `phase${ctx.phaseNumber}-${agentDef.name}-draft.md`;
+  const contextFilePath = join(contextDir, contextFileName);
 
-  parts.push(`# 프로젝트 방향\n\n${projectDirection}`);
+  const contextParts: string[] = [];
+  contextParts.push(`# 프로젝트 방향\n\n${projectDirection}`);
 
-  // 의존 아티팩트 주입
   for (const inputPath of agentDef.inputs) {
     const content = ctx.previousArtifacts.get(inputPath);
     if (content) {
-      parts.push(`---\n\n# 입력: ${inputPath}\n\n${content}`);
+      contextParts.push(`---\n\n# 입력: ${inputPath}\n\n${content}`);
     } else {
-      parts.push(`---\n\n# 입력: ${inputPath}\n\n(아직 생성되지 않음)`);
+      contextParts.push(`---\n\n# 입력: ${inputPath}\n\n(아직 생성되지 않음)`);
     }
   }
+
+  await writeFile(contextFilePath, contextParts.join("\n\n"), "utf-8");
 
   const fileInstructions = agentDef.outputFiles
     .map((f) => `Write 도구를 사용하여 ${ctx.artifactsDir}/${f.replace("artifacts/", "")} 파일에 저장하라.`)
     .join("\n");
-  parts.push(
-    `---\n\n위 내용을 바탕으로 ${agentDef.outputFiles.join(", ")}를 작성하라.\n${fileInstructions}`,
-  );
 
-  return parts.join("\n\n");
+  return [
+    `먼저 Read 도구로 다음 컨텍스트 파일을 읽어라: ${contextFilePath}`,
+    ``,
+    `컨텍스트 파일에는 프로젝트 방향과 입력 아티팩트가 포함되어 있다.`,
+    `이를 바탕으로 ${agentDef.outputFiles.join(", ")}를 작성하라.`,
+    fileInstructions,
+  ].join("\n");
 }
 
 async function buildReviewPrompt(
@@ -107,24 +114,14 @@ async function buildReviewPrompt(
     "artifacts/",
     "",
   );
-  let targetContent: string;
-  try {
-    targetContent = await readFile(
-      join(ctx.artifactsDir, targetFile),
-      "utf-8",
-    );
-  } catch {
-    targetContent = "(아직 생성되지 않음)";
-  }
+  const targetFilePath = join(ctx.artifactsDir, targetFile);
 
   const reviewFileName = `phase${ctx.phaseNumber}-${agentDef.name}-reviews-${targetFile.replace(".md", "").replace(".json", "")}.md`;
 
   return [
     `# 교차 리뷰 (라운드 ${round})`,
     ``,
-    `## 리뷰 대상: ${agentDef.crossReview.targetArtifact}`,
-    ``,
-    targetContent,
+    `먼저 Read 도구로 리뷰 대상 파일을 읽어라: ${targetFilePath}`,
     ``,
     `## 리뷰 기준`,
     agentDef.crossReview.reviewCriteria,
@@ -141,24 +138,14 @@ async function buildRevisePrompt(
   ctx: PhaseContext,
   round: number,
 ): Promise<string> {
-  const contentParts: string[] = [];
+  // 현재 산출물 파일 경로 목록
+  const artifactFiles = agentDef.outputFiles.map((f) => {
+    const outputFile = f.replace("artifacts/", "");
+    return join(ctx.artifactsDir, outputFile);
+  });
 
-  for (const outputFilePath of agentDef.outputFiles) {
-    const outputFile = outputFilePath.replace("artifacts/", "");
-    let currentContent: string;
-    try {
-      currentContent = await readFile(
-        join(ctx.artifactsDir, outputFile),
-        "utf-8",
-      );
-    } catch {
-      currentContent = "(아직 생성되지 않음)";
-    }
-    contentParts.push(`## 현재 산출물: ${outputFilePath}\n\n${currentContent}`);
-  }
-
-  // 리뷰 파일 수집
-  const reviewParts: string[] = [];
+  // 리뷰 파일 경로 목록
+  const reviewFilePaths: string[] = [];
   try {
     const reviewFiles = await readdir(ctx.reviewsDir);
     for (const outputFilePath of agentDef.outputFiles) {
@@ -166,11 +153,7 @@ async function buildRevisePrompt(
       const targetName = outputFile.replace(".md", "").replace(".json", "");
       for (const rf of reviewFiles) {
         if (rf.includes(`reviews-${targetName}`)) {
-          const reviewContent = await readFile(
-            join(ctx.reviewsDir, rf),
-            "utf-8",
-          );
-          reviewParts.push(`### 리뷰: ${rf}\n\n${reviewContent}`);
+          reviewFilePaths.push(join(ctx.reviewsDir, rf));
         }
       }
     }
@@ -178,25 +161,23 @@ async function buildRevisePrompt(
     // reviews 디렉토리가 비었거나 없음
   }
 
-  if (reviewParts.length === 0) {
-    reviewParts.push("(리뷰 코멘트 없음)");
-  }
-
   const writeInstructions = agentDef.outputFiles
     .map((f) => `Write 도구를 사용하여 ${ctx.artifactsDir}/${f.replace("artifacts/", "")} 파일에 덮어쓰라.`)
     .join("\n");
 
+  const readInstructions = [
+    ...artifactFiles.map((f) => `- 현재 산출물: ${f}`),
+    ...reviewFilePaths.map((f) => `- 리뷰 코멘트: ${f}`),
+  ].join("\n");
+
   return [
     `# 산출물 반영 및 확정 (라운드 ${round})`,
     ``,
-    ...contentParts,
-    ``,
-    `## 받은 리뷰 코멘트`,
-    ``,
-    reviewParts.join("\n\n"),
+    `먼저 Read 도구로 다음 파일들을 읽어라:`,
+    readInstructions,
     ``,
     `## 지침`,
-    `위 리뷰 코멘트를 반영하여 산출물을 수정하라.`,
+    `리뷰 코멘트를 반영하여 산출물을 수정하라.`,
     writeInstructions,
     `변경할 내용이 없으면 "변경 사항 없음"이라고 응답하라.`,
   ].join("\n");
