@@ -13,6 +13,7 @@ README, API 문서, 설치/배포 가이드, 기여 가이드 등 프로젝트 �
 - `artifacts/file-manifest.md` 또는 `artifacts/backend-manifest.md` (참고)
 - `artifacts/api-spec.md` (있을 경우 참고)
 - `artifacts/devops-manifest.md` (있을 경우 참고)
+- `artifacts/code-review.md` (리뷰 반영 Phase에서 참고)
 
 ## 출력 규격
 

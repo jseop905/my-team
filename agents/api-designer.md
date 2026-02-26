@@ -24,6 +24,13 @@
   - 페이지네이션, 필터링 규칙
   - API 버저닝 전략
 
+Phase 리뷰 반영 시:
+- 파일: `artifacts/api-revision-manifest.md`
+- 포함 내용:
+  - 수정한 항목 요약
+  - 반영한 리뷰 항목
+  - 미반영 항목 및 사유
+
 ## 교차 리뷰 역할
 
 - `artifacts/ux-design.md`를 리뷰한다.

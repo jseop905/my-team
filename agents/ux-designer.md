@@ -23,6 +23,13 @@
   - 반응형 전략 (브레이크포인트, 레이아웃 변화)
   - 접근성 설계 기준
 
+Phase 리뷰 반영 시:
+- 파일: `artifacts/ux-revision-manifest.md`
+- 포함 내용:
+  - 수정한 항목 요약
+  - 반영한 리뷰 항목
+  - 미반영 항목 및 사유
+
 ## 교차 리뷰 역할
 
 - `artifacts/tech-architecture.md`를 리뷰한다.

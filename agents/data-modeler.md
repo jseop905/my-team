@@ -23,6 +23,13 @@
   - 데이터 마이그레이션 전략
   - 시드 데이터 정의
 
+Phase 리뷰 반영 시:
+- 파일: `artifacts/data-model-revision-manifest.md`
+- 포함 내용:
+  - 수정한 항목 요약
+  - 반영한 리뷰 항목
+  - 미반영 항목 및 사유
+
 ## 교차 리뷰 역할
 
 - `artifacts/api-spec.md`를 리뷰한다.

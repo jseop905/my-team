@@ -9,6 +9,7 @@
 
 - `artifacts/tech-architecture.md` (필수)
 - `artifacts/file-manifest.md` 또는 `artifacts/backend-manifest.md` (참고)
+- `artifacts/security-audit.md` (리뷰 반영 Phase에서 참고)
 
 ## 출력 규격
 

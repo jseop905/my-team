@@ -10,6 +10,7 @@
 - `artifacts/project-vision.md` (필수)
 - `artifacts/tech-architecture.md` (필수)
 - `artifacts/api-spec.md` (있을 경우 참고)
+- `artifacts/code-review.md` (리뷰 반영 Phase에서 참고)
 
 ## 출력 규격
 
@@ -26,6 +27,11 @@ Phase 리뷰 반영 시:
   - 수정한 파일 목록과 변경 사항 요약
   - 반영한 리뷰 항목
   - 미반영 항목 및 사유
+
+## 교차 리뷰 역할
+
+- `artifacts/file-manifest.md`를 리뷰한다.
+- 프론트엔드의 API 호출이 백엔드 스펙과 일치하는지 검토한다.
 
 ## 프롬프트 템플릿
 
