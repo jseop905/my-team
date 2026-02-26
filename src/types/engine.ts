@@ -28,10 +28,13 @@ export interface LogEntry {
   agent: string;
   phase: number;
   turn: number;
-  status: "in_progress" | "completed" | "error";
+  status: "in_progress" | "completed" | "error" | "prompt" | "response";
   message: string;
   artifact?: string;
   inputTokens?: number;
   outputTokens?: number;
   durationMs?: number;
+  systemPrompt?: string;
+  prompt?: string;
+  response?: string;
 }

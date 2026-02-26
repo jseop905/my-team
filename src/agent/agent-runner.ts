@@ -54,6 +54,8 @@ export async function runAgent(
 
   const systemPrompt = buildSystemPrompt(agentDef, artifactsDir, projectDir);
 
+  await logger.logPrompt(agentDef.name, phase, turn, systemPrompt, prompt);
+
   try {
     const permissionMode =
       process.env.AGENT_PERMISSION_MODE ?? "bypassPermissions";
@@ -91,6 +93,8 @@ export async function runAgent(
     );
     resultText = textBlocks?.map((b) => b.text).join("\n") ?? "";
     success = true;
+
+    await logger.logResponse(agentDef.name, phase, turn, resultText);
   } catch (err) {
     error = err instanceof Error ? err.message : String(err);
     success = false;

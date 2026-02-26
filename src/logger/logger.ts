@@ -27,6 +27,44 @@ export class Logger {
     console.log(`    [${agent}] ${message}`);
   }
 
+  async logPrompt(
+    agent: string,
+    phase: number,
+    turn: number,
+    systemPrompt: string,
+    prompt: string,
+  ): Promise<void> {
+    const entry: LogEntry = {
+      timestamp: new Date().toISOString(),
+      agent,
+      phase,
+      turn,
+      status: "prompt",
+      message: "프롬프트 전달",
+      systemPrompt,
+      prompt,
+    };
+    await this.write(agent, entry);
+  }
+
+  async logResponse(
+    agent: string,
+    phase: number,
+    turn: number,
+    response: string,
+  ): Promise<void> {
+    const entry: LogEntry = {
+      timestamp: new Date().toISOString(),
+      agent,
+      phase,
+      turn,
+      status: "response",
+      message: "에이전트 응답",
+      response,
+    };
+    await this.write(agent, entry);
+  }
+
   async logComplete(
     agent: string,
     phase: number,
