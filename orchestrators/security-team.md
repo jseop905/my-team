@@ -52,10 +52,12 @@ Phase 2: Integrator (단독) — 종합 리포트
 
 ## 입력
 
-- 개발 팀 run의 산출물 (`--input-run`으로 지정)
-  - `artifacts/file-manifest.md` 또는 `artifacts/backend-manifest.md`
-  - `artifacts/tech-architecture.md`
-- 개발 팀 run의 `project/` 디렉토리를 참조
+- 직전 run의 산출물 (`--input-run`으로 지정)
+  - `artifacts/file-manifest.md` 또는 `artifacts/backend-manifest.md` (필수)
+  - `artifacts/tech-architecture.md` (pass-through로 자동 포함)
+- 직전 run의 `project/` 디렉토리를 참조
+
+> 선행 run의 artifacts는 pass-through로 자동 전파되므로, 직전 run만 지정하면 된다.
 
 ## 출력 → 다음 단계
 

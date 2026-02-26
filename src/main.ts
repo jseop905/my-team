@@ -58,6 +58,12 @@ async function main() {
     phaseNumbers,
     inputRunId,
   );
+  // 선행 run의 artifacts를 현재 run에 pass-through 복사
+  if (inputRunId) {
+    await runManager.copyInputArtifacts(inputRunId, runDir);
+    console.log(`입력 run: ${inputRunId} (artifacts pass-through 완료)`);
+  }
+
   console.log(`\nRun: ${runMeta.id}`);
   console.log(`출력: ${runDir}\n`);
 

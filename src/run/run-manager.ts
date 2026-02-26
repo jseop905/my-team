@@ -1,4 +1,5 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { PhaseStatus, RunError, RunMeta } from "../types/index.js";
 
@@ -85,6 +86,30 @@ export class RunManager {
     runMeta.totalInputTokens = totalInputTokens;
     runMeta.totalOutputTokens = totalOutputTokens;
     await this.saveMeta(runDir, runMeta);
+  }
+
+  /**
+   * 선행 run의 artifacts를 현재 run의 artifacts 디렉토리에 복사한다.
+   * 이미 동일 이름의 파일이 있으면 덮어쓰지 않는다.
+   */
+  async copyInputArtifacts(
+    inputRunId: string,
+    destRunDir: string,
+  ): Promise<void> {
+    const srcDir = join(this.runsBaseDir, inputRunId, "artifacts");
+    const destDir = join(destRunDir, "artifacts");
+
+    try {
+      const entries = await readdir(srcDir);
+      for (const entry of entries) {
+        const destPath = join(destDir, entry);
+        if (!existsSync(destPath)) {
+          await copyFile(join(srcDir, entry), destPath);
+        }
+      }
+    } catch {
+      // 소스 디렉토리가 없거나 비어있는 경우
+    }
   }
 
   /**
