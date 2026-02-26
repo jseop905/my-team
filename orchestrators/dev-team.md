@@ -1,6 +1,6 @@
 # Orchestrator: Dev Team
 
-개발 전문 팀 오케스트레이터. 확정된 기획서와 기술 설계서를 바탕으로 Next.js 블로그 프로젝트를 구현한다.
+개발 전문 팀 오케스트레이터. 확정된 기획서와 기술 설계서를 바탕으로 프론트엔드 프로젝트를 구현한다.
 
 ## 팀 구성
 
@@ -8,7 +8,7 @@
 
 | 에이전트         | 역할                               |
 | ---------------- | ---------------------------------- |
-| `frontend-dev`   | Next.js 블로그 전체 구현           |
+| `frontend-dev`   | 프론트엔드 전체 구현               |
 | `code-reviewer`  | 코드 품질 리뷰 (코드 수정 불가)    |
 
 ## Phase 배정
@@ -34,7 +34,7 @@
 
 ```
 Phase 1: Frontend Dev (단독) — 프로젝트 전체 구현
-  ├── runs/{run-id}/project/ 에 Next.js 프로젝트 코드 생성
+  ├── runs/{run-id}/project/ 에 프론트엔드 프로젝트 코드 생성
   └── artifacts/file-manifest.md 작성
 
 Phase 2: Code Reviewer (단독) — 코드 리뷰
@@ -55,5 +55,5 @@ Phase 3: Frontend Dev (단독) — 리뷰 반영 수정
 
 ## 출력 → 다음 단계
 
-이 오케스트레이터의 산출물은 `runs/{run-id}/project/` 디렉토리에 완성된 Next.js 프로젝트이다.
-사용자가 해당 디렉토리에서 `pnpm install && pnpm dev`로 실행할 수 있다.
+이 오케스트레이터의 산출물은 `runs/{run-id}/project/` 디렉토리에 완성된 프론트엔드 프로젝트이다.
+사용자가 해당 디렉토리에서 의존성 설치 후 실행할 수 있다.
