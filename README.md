@@ -2,24 +2,30 @@
 
 마크다운으로 팀과 태스크를 정의하면, AI 에이전트들이 협업하여 산출물을 생성하는 시스템.
 
-[Claude Agent SDK](https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk) 기반.
+[Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) 기반. Claude Max/Pro 요금제를 그대로 사용한다.
 
 ## 빠른 시작
 
-### 1. 설치
+### 1. 사전 조건
+
+- **Node.js** 20.6 이상
+- **Claude Code CLI** 설치 및 로그인 완료 (`claude auth` 로 확인)
+
+### 2. 설치
 
 ```bash
 npm install
 ```
 
-### 2. 환경변수
+### 3. 환경변수 (선택)
+
+`.env` 파일에 설정할 수 있다.
 
 | 변수 | 필수 | 설명 |
 |------|:----:|------|
-| `ANTHROPIC_API_KEY` | O | Anthropic API 키 |
 | `AGENT_PERMISSION_MODE` | X | 에이전트 권한 모드 (기본: `bypassPermissions`) |
 
-### 3. 태스크 작성
+### 4. 태스크 작성
 
 `tasks/` 디렉토리에 마크다운 파일을 만든다. 이것만 작성하면 바로 실행할 수 있다.
 
@@ -50,7 +56,7 @@ npm install
 - 일정 제약 (예: "2주 안에 MVP")
 - 기타 제약 조건
 
-### 4. 실행
+### 5. 실행
 
 ```bash
 npm run orchestrate -- <오케스트레이터> <태스크>
@@ -63,7 +69,7 @@ npm run orchestrate -- planning-team my-blog
 
 오케스트레이터에 정의된 에이전트들이 협업하여 `runs/` 디렉토리에 산출물을 자동 생성한다.
 
-### 5. 체이닝 (선택)
+### 6. 체이닝 (선택)
 
 이전 실행 결과를 다음 오케스트레이터의 입력으로 연결할 수 있다.
 
@@ -118,6 +124,34 @@ Turn 3: 반영 및 확정 (순차)
 
 (Turn 2~3을 최대 2라운드 반복, 변경 없으면 조기 종료)
 ```
+
+## 오류 처리
+
+### 오류 감지
+
+에이전트 실행 중 오류가 발생하면 stderr를 통해 실시간으로 콘솔에 출력된다.
+
+```
+    [planner] Error: ...
+```
+
+### 오류 발생 시 흐름
+
+```
+에이전트 실패
+  → 자동 1회 재시도
+    → 또 실패 → Phase 실패 처리
+      → Run 전체 FAILED로 종료
+```
+
+### 실패 후 데이터 보존
+
+- **이전 Phase 산출물은 보존**된다. (`runs/*/artifacts/`)
+- 에러 내역은 `run-meta.json`의 `errors` 배열에 기록된다.
+- 에이전트별 로그 파일(`logs/*.jsonl`)에 실패 기록이 남는다.
+
+> 현재 실패한 Phase부터 재개하는 기능은 지원하지 않는다.
+> 실패 시 처음부터 다시 실행해야 한다.
 
 ## 실행 결과
 

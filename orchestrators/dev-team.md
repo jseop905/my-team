@@ -1,28 +1,50 @@
 # Orchestrator: Dev Team
 
-개발 전문 팀 오케스트레이터. 확정된 기획서와 기술 설계서를 바탕으로 코드를 구현한다.
+개발 전문 팀 오케스트레이터. 확정된 기획서와 기술 설계서를 바탕으로 프론트엔드 프로젝트를 구현한다.
 
-> **상태**: 향후 설계 예정. 기획 팀 오케스트레이터를 시험 실행한 뒤 구체화한다.
-
-## 팀 구성 (초안)
+## 팀 구성
 
 공유 에이전트 풀(`agents/`)에서 다음 에이전트를 사용한다:
 
-| 에이전트        | 역할                       | 상태        |
-| --------------- | -------------------------- | ----------- |
-| `frontend-dev`  | UI/페이지 구현             | 향후 정의   |
-| `backend-dev`   | API/서버 구현              | 향후 정의   |
-| `qa`            | 테스트 코드 작성 및 실행   | 향후 정의   |
-| `code-reviewer` | 코드 품질 검토             | 향후 정의   |
-| `devops`        | 인프라/배포 설정           | 향후 정의   |
+| 에이전트         | 역할                               |
+| ---------------- | ---------------------------------- |
+| `frontend-dev`   | 프론트엔드 전체 구현               |
+| `code-reviewer`  | 코드 품질 리뷰 (코드 수정 불가)    |
 
-## Phase 배정 (초안)
+## Phase 배정
 
-| Phase | 에이전트                     | 실행 방식                      |
-| ----- | ---------------------------- | ------------------------------ |
-| 1     | Frontend Dev + Backend Dev   | Turn 기반 (구현 → 리뷰 → 수정)|
-| 2     | QA + Code Reviewer           | Turn 기반 (검증 → 피드백)      |
-| 3     | DevOps                       | 단독 실행                      |
+| Phase | 에이전트         | 실행 방식                              |
+| ----- | ---------------- | -------------------------------------- |
+| 1     | Frontend Dev     | 단독 실행                              |
+| 2     | Code Reviewer    | 단독 실행                              |
+| 3     | Frontend Dev     | 단독 실행                              |
+
+## 산출물 정의
+
+모든 산출물은 `runs/{run-id}/artifacts/` 하위에 생성된다.
+코드 파일은 `runs/{run-id}/project/` 하위에 생성된다.
+
+| 산출물                              | 담당            | 설명                       |
+| ----------------------------------- | --------------- | -------------------------- |
+| `artifacts/file-manifest.md`        | Frontend Dev    | 생성 파일 목록 및 구조     |
+| `artifacts/code-review.md`          | Code Reviewer   | 코드 품질 리뷰 보고서      |
+| `artifacts/revision-manifest.md`    | Frontend Dev    | 리뷰 반영 수정 내역        |
+
+## 실행 흐름
+
+```
+Phase 1: Frontend Dev (단독) — 프로젝트 전체 구현
+  ├── runs/{run-id}/project/ 에 프론트엔드 프로젝트 코드 생성
+  └── artifacts/file-manifest.md 작성
+
+Phase 2: Code Reviewer (단독) — 코드 리뷰
+  ├── project/ 전체 코드 읽기 및 검토
+  └── artifacts/code-review.md 작성
+
+Phase 3: Frontend Dev (단독) — 리뷰 반영 수정
+  ├── code-review.md의 Critical/Major 이슈 수정
+  └── artifacts/revision-manifest.md 작성
+```
 
 ## 입력
 
@@ -30,15 +52,8 @@
   - `artifacts/project-vision.md`
   - `artifacts/market-analysis.md`
   - `artifacts/tech-architecture.md`
-  - `artifacts/final-summary.md`
-  - `artifacts/decisions.json`
 
-## 미결 설계 사항
+## 출력 → 다음 단계
 
-기획 팀 시험 실행 결과를 본 뒤 구체화할 항목:
-
-- [ ] 코드 산출물 관리 전략 (Git worktree vs 디렉토리 격리)
-- [ ] 에이전트별 허용 도구 범위 (Bash, Write, Edit 등)
-- [ ] 빌드/테스트 자동 실행 방법
-- [ ] Phase 간 반복 루프 (QA 실패 → 개발자 수정 → 재검증)
-- [ ] 코드 통합 방법 (Git merge vs 수동)
+이 오케스트레이터의 산출물은 `runs/{run-id}/project/` 디렉토리에 완성된 프론트엔드 프로젝트이다.
+사용자가 해당 디렉토리에서 의존성 설치 후 실행할 수 있다.

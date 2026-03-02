@@ -6,6 +6,7 @@ export interface PhaseContext {
   artifactsDir: string;
   reviewsDir: string;
   logsDir: string;
+  projectDir: string;
   previousArtifacts: Map<string, string>;
 }
 
@@ -15,7 +16,8 @@ export interface AgentExecutionResult {
   outputPaths?: string[];
   resultText: string;
   sessionId: string;
-  costUsd: number;
+  inputTokens: number;
+  outputTokens: number;
   durationMs: number;
   numTurns: number;
   error?: string;
@@ -26,9 +28,13 @@ export interface LogEntry {
   agent: string;
   phase: number;
   turn: number;
-  status: "in_progress" | "completed" | "error";
+  status: "in_progress" | "completed" | "error" | "prompt" | "response";
   message: string;
   artifact?: string;
-  costUsd?: number;
+  inputTokens?: number;
+  outputTokens?: number;
   durationMs?: number;
+  systemPrompt?: string;
+  prompt?: string;
+  response?: string;
 }

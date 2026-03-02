@@ -1,4 +1,4 @@
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
   AgentDefinition,
@@ -44,6 +44,7 @@ export class PhaseExecutor {
       artifactsDir: join(this.runDir, "artifacts"),
       reviewsDir: join(this.runDir, "reviews"),
       logsDir: join(this.runDir, "logs"),
+      projectDir: join(this.runDir, "project"),
       previousArtifacts,
     };
 
@@ -95,7 +96,7 @@ export class PhaseExecutor {
     ctx: PhaseContext,
   ): Promise<RetryResult[]> {
     const agentDef = this.agentDefs.get(ctx.agents[0])!;
-    const prompt = this.buildSoloPrompt(agentDef, ctx);
+    const prompt = await this.buildSoloPrompt(agentDef, ctx);
     const rr = await executeWithRetry(agentDef, prompt, ctx, this.logger, 1);
     return [rr];
   }
@@ -117,6 +118,20 @@ export class PhaseExecutor {
       // artifacts 디렉토리가 비어있을 수 있음
     }
 
+    // 현재 run의 reviews
+    try {
+      const entries = await readdir(join(this.runDir, "reviews"));
+      for (const entry of entries) {
+        const content = await readFile(
+          join(this.runDir, "reviews", entry),
+          "utf-8",
+        );
+        artifacts.set(`reviews/${entry}`, content);
+      }
+    } catch {
+      // reviews 디렉토리가 비어있을 수 있음
+    }
+
     // inputRunId가 있으면 선행 run의 artifacts도 추가
     if (this.runMeta.inputRunId) {
       const inputArtifacts = await this.runManager.loadInputRunArtifacts(
@@ -132,31 +147,53 @@ export class PhaseExecutor {
     return artifacts;
   }
 
-  private buildSoloPrompt(
+  private async buildSoloPrompt(
     agentDef: AgentDefinition,
     ctx: PhaseContext,
-  ): string {
-    const parts: string[] = [];
+  ): Promise<string> {
+    // 컨텍스트 파일 생성
+    const contextDir = join(ctx.runDir, "context");
+    const contextFileName = `phase${ctx.phaseNumber}-${agentDef.name}.md`;
+    const contextFilePath = join(contextDir, contextFileName);
 
-    parts.push(`# 프로젝트 방향\n\n${this.projectDirection}`);
+    const contextParts: string[] = [];
 
-    // 의존 아티팩트 주입
+    contextParts.push(`# 프로젝트 방향\n\n${this.projectDirection}`);
+
+    // 의존 아티팩트
     for (const inputPath of agentDef.inputs) {
       const content = ctx.previousArtifacts.get(inputPath);
       if (content) {
-        parts.push(`---\n\n# 입력: ${inputPath}\n\n${content}`);
+        contextParts.push(`---\n\n# 입력: ${inputPath}\n\n${content}`);
       } else {
-        parts.push(`---\n\n# 입력: ${inputPath}\n\n(아직 생성되지 않음)`);
+        contextParts.push(`---\n\n# 입력: ${inputPath}\n\n(아직 생성되지 않음)`);
       }
     }
 
+    // 리뷰 기록
+    const reviewEntries = [...ctx.previousArtifacts.entries()]
+      .filter(([path]) => path.startsWith("reviews/"));
+    if (reviewEntries.length > 0) {
+      const reviewParts = reviewEntries
+        .map(([path, content]) => `### ${path}\n\n${content}`)
+        .join("\n\n");
+      contextParts.push(`---\n\n# 리뷰 기록\n\n${reviewParts}`);
+    }
+
+    const contextContent = contextParts.join("\n\n").replaceAll("{projectDir}", ctx.projectDir);
+    await writeFile(contextFilePath, contextContent, "utf-8");
+
+    // 짧은 프롬프트만 반환
     const fileInstructions = agentDef.outputFiles
       .map((f) => `Write 도구를 사용하여 ${ctx.artifactsDir}/${f.replace("artifacts/", "")} 파일에 저장하라.`)
       .join("\n");
-    parts.push(
-      `---\n\n위 내용을 바탕으로 ${agentDef.outputFiles.join(", ")}를 작성하라.\n${fileInstructions}`,
-    );
 
-    return parts.join("\n\n");
+    return [
+      `먼저 Read 도구로 다음 컨텍스트 파일을 읽어라: ${contextFilePath}`,
+      ``,
+      `컨텍스트 파일에는 프로젝트 방향, 입력 아티팩트, 리뷰 기록이 포함되어 있다.`,
+      `이를 바탕으로 ${agentDef.outputFiles.join(", ")}를 작성하라.`,
+      fileInstructions,
+    ].join("\n");
   }
 }

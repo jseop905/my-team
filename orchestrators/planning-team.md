@@ -44,8 +44,8 @@ Phase 2: Research + Tech Architect (Turn 기반)
   │   ├── Research → artifacts/market-analysis.md (draft)
   │   └── Tech Architect → artifacts/tech-architecture.md (draft)
   ├── Turn 2 - 교차 리뷰 (순차)
-  │   ├── Tech Architect → reviews/phase2-tech-reviews-market.md
-  │   └── Research → reviews/phase2-research-reviews-tech.md
+  │   ├── Tech Architect → reviews/phase2-tech-architect-reviews-market-analysis.md
+  │   └── Research → reviews/phase2-research-reviews-tech-architecture.md
   └── Turn 3 - 반영 및 확정 (순차)
       ├── Research → artifacts/market-analysis.md (확정)
       └── Tech Architect → artifacts/tech-architecture.md (확정)
