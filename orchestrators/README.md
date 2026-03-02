@@ -13,6 +13,7 @@
 | Security Team | `security-team.md` | 보안/성능 감사 | security-auditor, performance-analyst, integrator |
 | Deploy Team | `deploy-team.md` | CI/CD 및 배포 구성 | devops, security-auditor |
 | Docs Team | `docs-team.md` | 프로젝트 문서화 | technical-writer, code-reviewer |
+| Blog Team | `blog-team.md` | 기술 블로그 작성 | research, blog-writer, code-reviewer |
 
 ## 실행 흐름 요약
 
@@ -65,6 +66,14 @@ Phase 2: Code Reviewer (단독) → code-review.md
 Phase 3: Technical Writer (단독) → 리뷰 반영 + docs-revision-manifest.md
 ```
 
+### Blog Team
+```
+Phase 1: Research (단독) → topic-research.md
+Phase 2: Blog Writer (단독) → 블로그 게시글 + blog-manifest.md
+Phase 3: Code Reviewer (단독) → blog-review.md
+Phase 4: Blog Writer (단독) → 리뷰 반영 + blog-revision-manifest.md
+```
+
 ## 파이프라인 체이닝
 
 `--input-run` 옵션으로 이전 run의 산출물을 다음 오케스트레이터에 전달한다.
@@ -73,6 +82,8 @@ Phase 3: Technical Writer (단독) → 리뷰 반영 + docs-revision-manifest.md
 planning-team → dev-team → qa-team → security-team → deploy-team → docs-team
                     │
                     └─ 또는 fullstack-team (프론트+백엔드 동시)
+
+blog-team (단독 실행 또는 planning-team 이후 체이닝)
 ```
 
 ### Artifacts Pass-through

@@ -36,6 +36,12 @@
 | API Designer | `api-designer.md` | API 엔드포인트, 스키마 설계 | `api-spec.md` |
 | Data Modeler | `data-modeler.md` | ERD, DB 스키마, 인덱스 전략 | `data-model.md` |
 
+## 콘텐츠 계열
+
+| 에이전트 | 파일 | 역할 | 출력 |
+|---|---|---|---|
+| Blog Writer | `blog-writer.md` | 기술 블로그 게시글 작성 | `blog-manifest.md` |
+
 ## 문서 계열
 
 | 에이전트 | 파일 | 역할 | 출력 |
