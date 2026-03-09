@@ -16,7 +16,7 @@
 
 | Phase | 에이전트                              | 실행 방식                              |
 | ----- | ------------------------------------- | -------------------------------------- |
-| 1     | Security Auditor, Performance Analyst | Turn 기반 (분석 → 교차 리뷰 → 반영)   |
+| 1     | Security Auditor, Performance Analyst | Turn 기반 (분석 → 교차 리뷰)           |
 | 2     | Integrator                            | 단독 실행                              |
 
 ## 산출물 정의
@@ -35,17 +35,14 @@
 ```
 Phase 1: Security Auditor + Performance Analyst (Turn 기반) — 병렬 감사
   ├── Turn 1 - 분석 (병렬)
-  │   ├── Security Auditor → artifacts/security-audit.md (초안)
-  │   └── Performance Analyst → artifacts/performance-analysis.md (초안)
-  ├── Turn 2 - 교차 리뷰 (순차)
-  │   ├── Security Auditor → 성능 최적화가 보안에 미치는 영향 리뷰
-  │   └── Performance Analyst → 보안 조치가 성능에 미치는 영향 리뷰
-  └── Turn 3 - 반영 및 확정 (순차)
-      ├── Security Auditor → artifacts/security-audit.md (확정)
-      └── Performance Analyst → artifacts/performance-analysis.md (확정)
+  │   ├── Security Auditor → artifacts/security-audit.md
+  │   └── Performance Analyst → artifacts/performance-analysis.md
+  └── Turn 2 - 교차 리뷰 (순차)
+      ├── Security Auditor → 성능 최적화가 보안에 미치는 영향 리뷰
+      └── Performance Analyst → 보안 조치가 성능에 미치는 영향 리뷰
 
 Phase 2: Integrator (단독) — 종합 리포트
-  ├── 보안/성능 보고서를 통합하여 우선순위 정리
+  ├── 초안 + 교차 리뷰를 모두 읽고 리뷰 피드백 반영하여 통합
   ├── artifacts/final-summary.md 작성
   └── artifacts/decisions.json 작성
 ```

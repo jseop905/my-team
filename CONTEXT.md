@@ -37,7 +37,7 @@ my-team/
 │   │   └── agent-runner.ts         # Claude Agent SDK query() 호출
 │   └── engine/
 │       ├── phase-executor.ts       # Phase 단위 실행 (Solo / Turn 분기)
-│       ├── turn-executor.ts        # Turn 기반 실행 (초안 → 교차 리뷰 → 반영)
+│       ├── turn-executor.ts        # Turn 기반 실행 (초안 → 교차 리뷰)
 │       └── retry.ts                # 실패 시 1회 재시도
 │
 └── runs/                   # 실행 결과 (자동 생성, .gitignore)
@@ -71,11 +71,10 @@ my-team/
 #### Phase 실행 방식 (2가지)
 
 1. **Solo** (에이전트 1명) → 단독 실행
-2. **Turn 기반** (에이전트 2명+) → 3단계 반복:
+2. **Turn 기반** (에이전트 2명+) → 2단계:
    - Turn 1: 초안 작성 (병렬)
    - Turn 2: 교차 리뷰 (순차) — 서로의 산출물을 리뷰
-   - Turn 3: 반영 및 확정 (순차) — 리뷰 반영하여 수정
-   - Turn 2~3은 최대 2라운드 반복, "변경 사항 없음"이면 조기 종료
+   - 리뷰 피드백은 다음 Phase (통합 등)에서 반영
 
 ### Planning Team 실행 흐름 (현재 유일한 완성된 오케스트레이터)
 
@@ -86,8 +85,6 @@ Phase 1: Planner (Solo)
 Phase 2: Research + Tech Architect (Turn 기반)
   → Turn 1: 병렬로 market-analysis.md, tech-architecture.md 초안
   → Turn 2: 서로 교차 리뷰
-  → Turn 3: 리뷰 반영 수정
-  → (반복 최대 2회)
 
 Phase 3: Integrator (Solo)
   → artifacts/final-summary.md + artifacts/decisions.json
@@ -138,9 +135,9 @@ npm run orchestrate -- dev-team my-blog --input-run 2026-02-25_001_planning-team
   - Solo/Turn 분기, 이전 아티팩트 수집, 실패 시 에러 기록
   - `inputRunId`가 있으면 선행 run의 아티팩트도 수집
 - **turn-executor.ts**: Turn 기반 다중 에이전트 실행
-  - Turn 1 병렬, Turn 2~3 순차
+  - Turn 1 병렬 (초안), Turn 2 순차 (교차 리뷰)
   - 리뷰 파일명 규칙: `phase{N}-{agentName}-reviews-{targetName}.md`
-  - 조기 종료: 모든 에이전트의 resultText에 "변경 사항 없음" 포함 시
+  - 리뷰 피드백은 다음 Phase에서 반영 (개별 에이전트의 반영 단계 없음)
 - **retry.ts**: 실패 시 1회 재시도, `RetryResult`로 재시도 여부 추적
 
 ## 실행 결과 구조 (`runs/`)

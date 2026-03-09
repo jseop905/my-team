@@ -18,9 +18,9 @@
 | Phase | 에이전트                     | 실행 방식                              |
 | ----- | ---------------------------- | -------------------------------------- |
 | 1     | API Designer                 | 단독 실행                              |
-| 2     | Frontend Dev, Backend Dev    | Turn 기반 (초안 → 교차 리뷰 → 반영)   |
-| 3     | Code Reviewer                | 단독 실행                              |
-| 4     | Frontend Dev, Backend Dev    | Turn 기반 (수정 → 교차 리뷰 → 반영)   |
+| 2     | Frontend Dev, Backend Dev    | Turn 기반 (초안 → 교차 리뷰)           |
+| 3     | Code Reviewer                | 단독 실행 (교차 리뷰 + 초안 통합 검토) |
+| 4     | Frontend Dev, Backend Dev    | Turn 기반 (수정 → 교차 리뷰)           |
 
 ## 산출물 정의
 
@@ -46,27 +46,21 @@ Phase 2: Frontend Dev + Backend Dev (Turn 기반) — 병렬 구현
   ├── Turn 1 - 초안 작성 (병렬)
   │   ├── Frontend Dev → project/ 에 프론트엔드 코드 생성, artifacts/file-manifest.md
   │   └── Backend Dev → project/ 에 백엔드 코드 생성, artifacts/backend-manifest.md
-  ├── Turn 2 - 교차 리뷰 (순차)
-  │   ├── Frontend Dev → Backend Dev의 API 구현이 스펙과 일치하는지 리뷰
-  │   └── Backend Dev → Frontend Dev의 API 호출이 스펙과 일치하는지 리뷰
-  └── Turn 3 - 반영 및 확정 (순차)
-      ├── Frontend Dev → 리뷰 반영
-      └── Backend Dev → 리뷰 반영
+  └── Turn 2 - 교차 리뷰 (순차)
+      ├── Frontend Dev → Backend Dev의 API 구현이 스펙과 일치하는지 리뷰
+      └── Backend Dev → Frontend Dev의 API 호출이 스펙과 일치하는지 리뷰
 
 Phase 3: Code Reviewer (단독) — 통합 코드 리뷰
-  ├── 프론트엔드 + 백엔드 전체 코드 읽기 및 검토
+  ├── 초안 + 교차 리뷰를 모두 읽고 통합 검토
   └── artifacts/code-review.md 작성
 
 Phase 4: Frontend Dev + Backend Dev (Turn 기반) — 리뷰 반영
   ├── Turn 1 - 수정 (병렬)
-  │   ├── Frontend Dev → code-review.md의 프론트엔드 이슈 수정
-  │   └── Backend Dev → code-review.md의 백엔드 이슈 수정
-  ├── Turn 2 - 교차 리뷰 (순차)
-  │   ├── Frontend Dev → Backend Dev 수정 사항 확인
-  │   └── Backend Dev → Frontend Dev 수정 사항 확인
-  └── Turn 3 - 반영 및 확정 (순차)
-      ├── Frontend Dev → artifacts/revision-manifest.md 작성
-      └── Backend Dev → artifacts/backend-revision-manifest.md 작성
+  │   ├── Frontend Dev → code-review.md의 프론트엔드 이슈 수정, artifacts/revision-manifest.md
+  │   └── Backend Dev → code-review.md의 백엔드 이슈 수정, artifacts/backend-revision-manifest.md
+  └── Turn 2 - 교차 리뷰 (순차)
+      ├── Frontend Dev → Backend Dev 수정 사항 확인
+      └── Backend Dev → Frontend Dev 수정 사항 확인
 ```
 
 ## 입력

@@ -20,8 +20,8 @@
 ### Planning Team
 ```
 Phase 1: Planner (단독) → project-vision.md
-Phase 2: Research + Tech Architect (Turn) → market-analysis.md, tech-architecture.md
-Phase 3: Integrator (단독) → final-summary.md, decisions.json
+Phase 2: Research + Tech Architect (Turn) → 초안 + 교차 리뷰
+Phase 3: Integrator (단독) → 리뷰 반영 통합 → final-summary.md, decisions.json
 ```
 
 ### Dev Team
@@ -35,8 +35,8 @@ Phase 3: Frontend Dev (단독) → 리뷰 반영 + revision-manifest.md
 ```
 Phase 1: API Designer (단독) → api-spec.md
 Phase 2: Frontend Dev + Backend Dev (Turn) → 병렬 구현 + 교차 리뷰
-Phase 3: Code Reviewer (단독) → code-review.md
-Phase 4: Frontend Dev + Backend Dev (Turn) → 리뷰 반영
+Phase 3: Code Reviewer (단독) → 초안 + 리뷰 통합 검토 → code-review.md
+Phase 4: Frontend Dev + Backend Dev (Turn) → 리뷰 반영 + 교차 리뷰
 ```
 
 ### QA Team
@@ -49,7 +49,7 @@ Phase 3: Test Engineer (단독) → 리뷰 반영 + test-revision-manifest.md
 ### Security Team
 ```
 Phase 1: Security Auditor + Performance Analyst (Turn) → 병렬 감사 + 교차 리뷰
-Phase 2: Integrator (단독) → final-summary.md, decisions.json
+Phase 2: Integrator (단독) → 리뷰 반영 통합 → final-summary.md, decisions.json
 ```
 
 ### Deploy Team

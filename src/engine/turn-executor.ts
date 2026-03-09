@@ -1,4 +1,4 @@
-import { readdir, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {
   AgentDefinition,
@@ -6,8 +6,6 @@ import type {
 } from "../types/index.js";
 import type { Logger } from "../logger/logger.js";
 import { executeWithRetry, type RetryResult } from "./retry.js";
-
-const MAX_REVIEW_ROUNDS = 2;
 
 export async function executeTurns(
   ctx: PhaseContext,
@@ -27,40 +25,15 @@ export async function executeTurns(
   const draftResults = await Promise.all(draftPromises);
   allResults.push(...draftResults);
 
-  // ========== Turn 2~3 반복 (최대 MAX_REVIEW_ROUNDS회) ==========
-  for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
-    console.log(`\n  리뷰 라운드 ${round}/${MAX_REVIEW_ROUNDS}`);
+  // ========== Turn 2: 교차 리뷰 (순차) ==========
+  console.log(`\n  Turn 2: 교차 리뷰 (순차)`);
+  for (const agentName of ctx.agents) {
+    const agentDef = agentDefs.get(agentName)!;
+    if (!agentDef.crossReview) continue;
 
-    // ----- Turn 2: 교차 리뷰 (순차) -----
-    console.log(`  Turn 2: 교차 리뷰 (순차)`);
-    for (const agentName of ctx.agents) {
-      const agentDef = agentDefs.get(agentName)!;
-      if (!agentDef.crossReview) continue;
-
-      const prompt = await buildReviewPrompt(agentDef, ctx, round);
-      const rr = await executeWithRetry(agentDef, prompt, ctx, logger, 2);
-      allResults.push(rr);
-    }
-
-    // ----- Turn 3: 반영 및 확정 (순차) -----
-    console.log(`  Turn 3: 반영 및 확정 (순차)`);
-    const reviseResults: RetryResult[] = [];
-    for (const agentName of ctx.agents) {
-      const agentDef = agentDefs.get(agentName)!;
-      const prompt = await buildRevisePrompt(agentDef, ctx, round);
-      const rr = await executeWithRetry(agentDef, prompt, ctx, logger, 3);
-      reviseResults.push(rr);
-    }
-    allResults.push(...reviseResults);
-
-    // 조기 종료: 모든 에이전트가 "변경 사항 없음" 응답 시 리뷰 루프 중단
-    const allNoChange = reviseResults.every((rr) =>
-      rr.result.resultText.includes("변경 사항 없음"),
-    );
-    if (allNoChange) {
-      console.log(`  모든 에이전트 "변경 사항 없음" — 리뷰 루프 조기 종료`);
-      break;
-    }
+    const prompt = await buildReviewPrompt(agentDef, ctx, 1);
+    const rr = await executeWithRetry(agentDef, prompt, ctx, logger, 2);
+    allResults.push(rr);
   }
 
   return allResults;
@@ -133,52 +106,3 @@ async function buildReviewPrompt(
   ].join("\n");
 }
 
-async function buildRevisePrompt(
-  agentDef: AgentDefinition,
-  ctx: PhaseContext,
-  round: number,
-): Promise<string> {
-  // 현재 산출물 파일 경로 목록
-  const artifactFiles = agentDef.outputFiles.map((f) => {
-    const outputFile = f.replace("artifacts/", "");
-    return join(ctx.artifactsDir, outputFile);
-  });
-
-  // 리뷰 파일 경로 목록
-  const reviewFilePaths: string[] = [];
-  try {
-    const reviewFiles = await readdir(ctx.reviewsDir);
-    for (const outputFilePath of agentDef.outputFiles) {
-      const outputFile = outputFilePath.replace("artifacts/", "");
-      const targetName = outputFile.replace(".md", "").replace(".json", "");
-      for (const rf of reviewFiles) {
-        if (rf.includes(`reviews-${targetName}`)) {
-          reviewFilePaths.push(join(ctx.reviewsDir, rf));
-        }
-      }
-    }
-  } catch {
-    // reviews 디렉토리가 비었거나 없음
-  }
-
-  const writeInstructions = agentDef.outputFiles
-    .map((f) => `Write 도구를 사용하여 ${ctx.artifactsDir}/${f.replace("artifacts/", "")} 파일에 덮어쓰라.`)
-    .join("\n");
-
-  const readInstructions = [
-    ...artifactFiles.map((f) => `- 현재 산출물: ${f}`),
-    ...reviewFilePaths.map((f) => `- 리뷰 코멘트: ${f}`),
-  ].join("\n");
-
-  return [
-    `# 산출물 반영 및 확정 (라운드 ${round})`,
-    ``,
-    `먼저 Read 도구로 다음 파일들을 읽어라:`,
-    readInstructions,
-    ``,
-    `## 지침`,
-    `리뷰 코멘트를 반영하여 산출물을 수정하라.`,
-    writeInstructions,
-    `변경할 내용이 없으면 "변경 사항 없음"이라고 응답하라.`,
-  ].join("\n");
-}
